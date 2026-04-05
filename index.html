@@ -2,69 +2,74 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Android Browser Fix</title>
+    <title>Cốc Cốc 2014 Edition</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body, html { height: 100%; width: 100%; background: #000; font-family: sans-serif; overflow: hidden; }
-        
-        .browser-container { display: flex; flex-direction: column; height: 100vh; width: 100%; background: #fff; }
-        
-        /* Address Bar */
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #eee; overflow: hidden; }
+
+        /* Thanh tiêu đề xanh lá đặc trưng */
+        .header {
+            background: #4ba34b; /* Màu xanh Cốc Cốc */
+            height: 60px; display: flex; align-items: center; padding: 0 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .logo {
+            color: white; font-weight: bold; font-size: 20px; margin-right: 20px;
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        /* Thanh địa chỉ */
         .address-bar {
-            padding: 40px 10px 10px; background: #fff; border-bottom: 1px solid #ddd;
-            display: flex; gap: 8px; align-items: center;
+            flex: 1; height: 34px; background: white; border-radius: 4px;
+            display: flex; align-items: center; padding: 0 10px; border: 1px solid #3e8e3e;
         }
-        .url-input {
-            flex: 1; height: 38px; background: #f1f3f4; border: none;
-            border-radius: 20px; padding: 0 15px; outline: none; font-size: 14px;
+
+        .address-bar input {
+            width: 100%; border: none; outline: none; font-size: 14px;
         }
+
         .btn-go {
-            width: 38px; height: 38px; border-radius: 50%; border: none;
-            background: #4285F4; color: white; font-weight: bold; cursor: pointer;
+            background: #3e8e3e; color: white; border: none; height: 34px;
+            padding: 0 20px; margin-left: 10px; border-radius: 4px; cursor: pointer;
         }
 
-        /* Iframe */
-        .content { flex: 1; width: 100%; border: none; background: #fff; }
-
-        /* Bottom Nav */
-        .nav { height: 25px; display: flex; justify-content: center; align-items: center; background: #fff; }
-        .pill { width: 100px; height: 4px; background: #ccc; border-radius: 2px; }
+        /* Vùng nội dung Web */
+        #web-view {
+            width: 100%; height: calc(100vh - 60px); border: none; background: white;
+        }
     </style>
 </head>
 <body>
 
-    <div class="browser-container">
+    <div class="header">
+        <div class="logo">🟢 Cốc Cốc</div>
         <div class="address-bar">
-            <input type="text" id="url-box" class="url-input" placeholder="Nhập địa chỉ (ví dụ: google.com)" value="google.com">
-            <button class="btn-go" onclick="loadPage()">➜</button>
+            <input type="text" id="url" placeholder="Nhập địa chỉ web hoặc tìm kiếm..." value="https://www.bing.com">
         </div>
-
-        <iframe id="main-frame" class="content" src="https://www.google.com/search?igu=1"></iframe>
-
-        <div class="nav">
-            <div class="pill"></div>
-        </div>
+        <button class="btn-go" onclick="loadUrl()">Truy cập</button>
     </div>
 
-    <script>
-        function loadPage() {
-            let url = document.getElementById('url-box').value.trim();
-            if (!url) return;
+    <iframe id="web-view" src="https://www.google.com/search?igu=1"></iframe>
 
-            // Nếu là google, dùng chế độ đặc biệt cho phép nhúng (igu=1)
-            if (url.includes("google.com")) {
-                document.getElementById('main-frame').src = "https://www.google.com/search?q=&igu=1";
-            } else {
-                // Với các trang khác, tự động thêm https
-                if (!url.startsWith('http')) url = 'https://' + url;
-                
-                // Mẹo: Dùng một proxy miễn phí để hiển thị trang web bị chặn nhúng
-                // Ở đây mình dùng link trực tiếp để test, nếu trang đó chặn, bạn cần dùng Proxy
-                document.getElementById('main-frame').src = url;
-            }
+    <script>
+        function loadUrl() {
+            let val = document.getElementById('url').value.trim();
+            if(!val.startsWith('http')) val = 'https://' + val;
+            
+            // Nếu gõ google, tự động chuyển sang bản cho phép nhúng
+            if(val.includes("google.com")) val = "https://www.google.com/search?q=&igu=1";
+            
+            document.getElementById('web-view').src = val;
         }
 
+        // Nhấn Enter để đi
+        document.getElementById('url').addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') loadUrl();
+        });
+    </script>
+</body>
+</html>
         // Nhấn Enter để chạy
         document.getElementById('url-box').addEventListener('keypress', function (e) {
             if (e.key === 'Enter') loadPage();
