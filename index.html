@@ -3,38 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Android 10 Browser Sim</title>
+    <title>Khánh Browser Sim</title>
     <style>
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: #000; font-family: sans-serif; overflow: hidden; }
+        * { box-sizing: border-box; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background: #f1f3f4; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
 
-        /* Màn hình điện thoại */
-        .phone {
-            position: relative; width: 100%; height: 100%;
-            background: url('https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=1000') center/cover;
-            display: flex; flex-direction: column;
+        /* Khung trình duyệt di động */
+        .browser-container {
+            display: flex; flex-direction: column; height: 100vh; width: 100%; background: #fff;
         }
 
-        /* Status Bar */
-        .status-bar { height: 30px; display: flex; justify-content: space-between; padding: 5px 15px; color: white; font-size: 12px; z-index: 5; }
-
-        /* Home Screen */
-        .home { flex: 1; display: flex; flex-direction: column; align-items: center; padding-top: 50px; }
-        .clock { color: white; font-size: 60px; font-weight: 300; margin-bottom: 40px; }
-        
-        .app-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; padding: 20px; width: 100%; }
-        .app-item { display: flex; flex-direction: column; align-items: center; color: white; font-size: 11px; cursor: pointer; }
-        .app-icon { width: 55px; height: 55px; border-radius: 15px; background: white; display: flex; justify-content: center; align-items: center; font-size: 28px; margin-bottom: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
-
-        /* Window App (Trình duyệt) */
-        .window {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #fff; z-index: 100; transform: translateY(100%);
-            transition: 0.3s cubic-bezier(0, 0, 0.2, 1); display: flex; flex-direction: column;
+        /* Thanh địa chỉ (Top Bar) */
+        .address-bar-wrapper {
+            padding: 40px 15px 10px 15px; /* Chừa chỗ cho tai thỏ/status bar */
+            background: #fff; border-bottom: 1px solid #dee2e6;
+            display: flex; align-items: center; gap: 10px;
         }
-        .window.open { transform: translateY(0); }
 
-        /* Thanh địa chỉ giống App Google */
+        .nav-btn {
+            background: none; border: none; font-size: 20px; cursor: pointer; color: #5f6368;
+            padding: 5px; border-radius: 50%; transition: 0.2s;
+        }
+        .nav-btn:hover { background: #f1f3f4; }
+
+        .input-container {
+            flex: 1; background: #f1f3f4; border-radius: 25px;
+            display: flex; align-items: center; padding: 0 15px; border: 1px solid transparent;
+        }
+        .input-container:focus-within { background: #fff; border-color: #4285F4; box-shadow: 0 1px 6px rgba(32,33,36,0.28); }
+
+        .url-input {
+            width: 100%; border: none; background: transparent; height: 38px;
+            outline: none; font-size: 14px; color: #202124;
+        }
+
+        /* Vùng hiển thị nội dung Web */
+        .content-area { flex: 1; position: relative; background: #eee; }
+        iframe { width: 100%; height: 100%; border: none; background: #fff; }
+
+        /* Thanh điều hướng dưới cùng (Android 10 style) */
+        .bottom-nav {
+            height: 45px; background: #fff; border-top: 1px solid #eee;
+            display: flex; justify-content: space-around; align-items: center;
+        }
+        .pill { width: 100px; height: 4px; background: #bdc1c6; border-radius: 2px; }
+
+        /* Thông báo lỗi nhúng */
+        .error-hint {
+            position: absolute; top: 20%; left: 10%; right: 10%; text-align: center;
+            color: #70757a; font-size: 14px; z-index: -1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="browser-container">
+        <div class="address-bar-wrapper">
+            <button class="nav-btn" onclick="goHome()">🏠</button>
+            <div class="input-container">
+                <span style="margin-right: 8px;">🔒</span>
+                <input type="text" id="url-field" class="url-input" 
+                       placeholder="Nhập URL hoặc tìm kiếm..." 
+                       value="https://www.bing.com">
+            </div>
+            <button class="nav-btn" onclick="refresh()">🔄</button>
+        </div>
+
+        <div class="content-area">
+            <div class="error-hint">
+                <p>Nếu trang web không hiển thị, có thể do trang đó chặn không cho nhúng (iframe).</p>
+                <p>Thử các link như: <b>bing.com</b>, <b>wikipedia.org</b>, <b>duckduckgo.com</b></p>
+            </div>
+            <iframe id="main-frame" src="https://www.bing.com"></iframe>
+        </div>
+
+        <div class="bottom-nav">
+            <button class="nav-btn" onclick="history.back()">◀</button>
+            <div class="pill"></div>
+            <button class="nav-btn" onclick="alert('Menu tùy chỉnh')">⋮</button>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('url-field');
+        const frame = document.getElementById('main-frame');
+
+        // Xử lý khi nhấn Enter để duyệt web
+        input.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                loadUrl();
+            }
+        });
+
+        function loadUrl() {
+            let url = input.value.trim();
+            if (!url.startsWith('http')) {
+                url = 'https://' + url;
+            }
+            frame.src = url;
+            input.value = url;
+        }
+
+        function goHome() {
+            input.value = "https://www.bing.com";
+            loadUrl();
+        }
+
+        function refresh() {
+            frame.src = frame.src;
+        }
+    </script>
+</body>
+</html>        /* Thanh địa chỉ giống App Google */
         .browser-header { padding: 35px 10px 10px; background: #fff; border-bottom: 1px solid #ddd; display: flex; gap: 8px; }
         .address-bar { flex: 1; background: #f1f3f4; border: none; border-radius: 20px; padding: 8px 15px; outline: none; font-size: 14px; }
         .go-btn { background: #4285F4; color: white; border: none; border-radius: 50%; width: 35px; height: 35px; cursor: pointer; }
